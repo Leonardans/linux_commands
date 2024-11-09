@@ -1,0 +1,176 @@
+# Linux commands
+cat -T ./linux_commands.txt | grep -A 1000 "Daemons" | awk 'NF{print} !NF{exit}'
+history, clear
+
+# Kernel
+lsmod
+sudo nano /etc/modprobe.d/intel-microcode-blacklist.conf
+sudo sysctl -p # reload settings
+sudo modinfo drm
+sudo mokutil --import /var/lib/dkms/mok.pub
+sudo mokutil --list-enrolled
+
+# System info
+neofetch
+inxi -Farz
+sudo dmidecode
+sudo lshw 
+lspci
+lscpu
+lsusb
+free -w -t -h # Memory state 
+vmstat -w -t / vmstat -w -s / vmstat -w -D # Virtual memory state
+/var/log/installer/hardware-summary 
+
+# CPU
+cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+
+# Sound
+lspci | grep Audio
+alsamixer # Sound mixer
+aplay
+wpctl # Pipewire
+
+# Graphics
+inxi -G
+lspci | grep VGA
+glxinfo | grep "OpenGL"
+sudo intel_gpu_top # Real-time
+glxgears # FPS check
+xrandr # Screen resolution 
+nvidia-smi
+nvidia-settings
+DRI_PRIME=1 glxgears
+
+# Users and groups
+compgen -u, getent passwd / group
+users, w, who, id, passwd, groups leonard
+useradd, groupadd
+userdel, groupdel
+usermod, groupmod
+cat /etc/group, /etc/passwd
+
+# Disk partition
+df -a -h -T, lsblk, findmnt # File systems 
+fdisk, gdisk, parted
+lsblk, blkid
+mount, unmount
+dd if=/home/leonard/tails-amd64-6.9.img of=/dev/sda bs=16M oflag=direct status=progress
+
+# Files and Directories
+pwd # print the current working directory.
+cd <path> — change the current directory.
+ls, ls -l, ls -a  — list files and directories in the current directory.
+touch <filename> — create a new empty file.
+mkdir <directory_name> — create a new directory.
+rm <filename> — remove a file.
+rmdir <directory_name> — remove an empty directory.
+rm -r <directory_name> — recursively remove a directory and its contents.
+cp <source> <destination> — copy a file or directory.
+cp -r <source> <destination> — recursively copy a directory.
+mv <source> <destination> — move a file or directory (also used for renaming).
+cat <filename> — display the contents of a file.
+less <filename> — view the contents of a file with scrolling capability.
+head <filename> — show the first 10 lines of a file.
+tail <filename> — show the last 10 lines of a file.
+nano <filename> — open a file in the Nano text editor.
+vim <filename> — open a file in the Vim text editor.
+chgrp developers myfile.txt # Changes the group ownership of myfile.txt to 'developers'.
+chmod 770 myscript.sh # Sets permissions of myscript.sh to rwxrwx--- (read, write, execute for owner and group, no permissions for others).
+chown user:developers myfile.txt " Changes the owner of myfile.txt to 'user' and the group to 'developers'.
+chattr +i myfile.txt # Makes myfile.txt immutable, preventing any changes to it.
+lsattr myfile.txt # Displays the attributes of myfile.txt, e.g., '----i-------- myfile.txt'.
+stat myfile.txt # Shows detailed information about myfile.txt, including size, permissions, and timestamps.
+du -h mydir # Estimates and displays the disk space used by mydir in human-readable format, e.g., '1.5G mydir'.
+# Search
+which command # Displays the path of the executable for the specified command; e.g., which python shows the path to the Python interpreter.
+find /path/to/search -name "*.txt" # Searches for all .txt files in the specified directory and its subdirectories; e.g., find . -name "*.log" finds all log files in the current directory.
+xargs -n 1 echo # Takes input from stdin and executes the command with the input as arguments; e.g., echo "file1 file2" | xargs -n 1 echo will output file1 and file2 on separate lines.
+
+# Packages  
+# dpkg
+dpkg -l # Installed packages list   
+dpkg -s bolt # Get info about package "bolt"
+dpkg -i /Downloads/bolt.deb # Install from local file "bolt" 
+# apt
+apt list --installed
+apt search bolt # Search for matches "bolt"
+apt show bolt
+apt policy bolt
+apt install bolt
+apt purge bolt
+apt update / apt upgrade
+apt full-upgrade # Include old packages removing
+apt autoremove
+# apt-cache
+apt-cache
+
+# Clean
+sudo rm -rf /var/cache/*
+rm /home/leonard/.cache
+
+# Processes 
+ps / pstree # Show processes  
+top / htop # Show processes at real-time  
+pgrep -l bolt / pidof # Find process PID 
+prtstat PID # Show info about process by PID 
+pmap PID # Show memory used by process by PID
+pwdx PID # Show process working directory by PID
+kill PID / killall / pkill # Kill process by PID  
+nice / renice # Start process with priority 
+lsof # It lists
+ information about any files that are open, by processes
+ currently running on the system.
+
+# Daemons 
+systemctl start / stop / enable / disable / status
+systemctl list-units --type=service # Show services list
+systemctl list-units --type=service --state=active / inactive / failed / loaded
+
+# Logs
+dmesg 
+journalctl -k, -b, -u bolt, -f, -n 100  
+
+# Tasks 
+crontab -l # User tasks 
+systemctl list-timers -all # systemd-timers list
+ls /etc/cron.weekly/ # Weekly tasks
+ls /etc/cron.daily/ # Daily tasks
+ls /etc/cron.monthly # Monthly tasks
+
+# Local variables
+printenv / env 
+set
+echo $XDG_RUNTIME_DIR
+echo 'export MY_VAR="some_value"' >> ~/.bashrc
+
+# Encryption
+# openssl
+openssl req -new -x509 -newkey rsa:2048 -keyout MOK.priv -outform DER -out MOK.der -nodes -days 36500 -subj "/CN=My Kernel Module Signing Key"
+# gpg
+# import key
+gpg --import < tails-signing.key
+gpg --keyring=/usr/share/keyrings/debian-keyring.gpg --export chris@chris-lamb.co.uk | gpg --import
+gpg --auto-key-locate clear,wkd -v --locate-external-key pierre@archlinux.org
+# generate key
+gpg --full-generate-key
+# check list of keys
+gpg --list-keys
+# check key
+gpg --keyid-format 0xlong --check-sigs A490D0F4D311A4153E2BB7CADBB802B258ACD84F
+# local key signing
+gpg --lsign-key A490D0F4D311A4153E2BB7CADBB802B258ACD84F
+# verify os image
+TZ=UTC gpg --no-options --keyid-format long --verify tails-amd64-6.9.img.sig tails-amd64-6.9.img 
+gpg --keyserver-options auto-key-retrieve --verify archlinux-2024.11.01-x86_64.iso.sig archlinux-2024.11.01-x86_64.iso
+
+# System analysis & Combinations 
+strace -p PID # Real-time process system calls
+# Check file usage
+ps -eo pid,comm # List of processes 
+lsof -p PID | less # List of files used by process by PID 
+fuser filename / lsof filename # Show which processes uses this file
+ls -l -a /proc/PID/fd/ # List of files descriptors
+peekfd PID FD # Process / Descriptor monitoring
+strace -xx -p PID # Monitor piecies of shities 
+
